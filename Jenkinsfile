@@ -22,7 +22,7 @@ pipeline {
                     docker buildx version || true
 
                     echo "===== Compose ====="
-                    docker-compose --version || true
+                    docker compose --version || true
                 '''
             }
         }
@@ -45,9 +45,9 @@ pipeline {
                 stage('Deploy') {
                     steps {
                         sh '''
-                            docker-compose down || true
-                            docker-compose build --no-cache
-                            docker-compose up -d
+                            docker compose down || true
+                            docker compose build --no-cache
+                            docker compose up -d
                         '''
                     }
                 }
