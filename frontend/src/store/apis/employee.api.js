@@ -35,7 +35,7 @@ export const employeePostApi = async (dataObj) => {
 
 export const employeePutApi = async (dataObj) => {
     try {
-        const response = await rootApi.put(`/employees/${dataObj.id}`, dataObj)
+        const response= await rootApi.put(`/employees/${dataObj.id}`, dataObj)
         return response.data
     } catch (error) {
         return error
