@@ -41,3 +41,14 @@ RUN groupadd -f docker
 RUN usermod -aG docker jenkins
 
 USER jenkins
+
+
+docker run -d \
+    --name jenkins \
+    --user root\
+    -p 8080:8080 \
+    -p 50000:50000 \
+    -v jenkins_home:/var/jenkins_home \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    --restart unless-stopped \
+    my jenkins
