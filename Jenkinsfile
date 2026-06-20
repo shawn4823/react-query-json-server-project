@@ -1,28 +1,17 @@
 pipeline {
-
     agent any
 
     stages {
-
         stage('Check Environment') {
             steps {
                 sh '''
-                    echo "===== Environment ====="
+                    echo ===== Environment =====
                     pwd
                     ls -al
-
-                    echo "===== Node ====="
+                    echo ===== Node =====
                     node -v
-                    npm -v
-
-                    echo "===== Docker ====="
-                    docker --version
-
-                    echo "===== Buildx ====="
-                    docker buildx version || true
-
-                    echo "===== Compose ====="
-                    docker compose version || true
+                    echo ===== Docker =====
+                    docker -v
                 '''
             }
         }
@@ -30,7 +19,7 @@ pipeline {
         stage('Install Frontend') {
             steps {
                 dir('frontend') {
-                    sh 'npm install'
+                    sh 'npm ci'
                 }
             }
         }
@@ -46,8 +35,8 @@ pipeline {
         stage('Deploy') {
             steps {
                 sh '''
-                    docker compose down || true
-                    docker compose build --no-cache
+                    docker compose down
+                    docker compose build
                     docker compose up -d
                 '''
             }
@@ -55,32 +44,26 @@ pipeline {
 
         stage('Check Containers') {
             steps {
-                sh '''
-                    docker ps
-                '''
+                sh 'docker ps -a'
             }
         }
     }
 
     post {
-
-        success {
+        always {
             echo '========================'
-            echo '배포 완료'
+            echo '배포 결과 확인'
             echo '========================'
-
-            sh 'docker ps'
-        }
-
-        failure {
-            echo '========================'
-            echo '배포 실패'
-            echo '========================'
-
             sh '''
                 docker ps -a || true
                 docker images || true
             '''
+        }
+        failure {
+            echo '배포 실패'
+        }
+        success {
+            echo '배포 성공'
         }
     }
 }
