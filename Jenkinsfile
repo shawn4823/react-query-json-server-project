@@ -1,69 +1,94 @@
 pipeline {
+
     agent any
 
     stages {
+
         stage('Check Environment') {
             steps {
                 sh '''
-                    echo ===== Environment =====
+                    echo "===== Environment ====="
                     pwd
                     ls -al
-                    echo ===== Node =====
+
+                    echo "===== Node ====="
                     node -v
-                    echo ===== Docker =====
-                    docker -v
+                    npm -v
+
+                    echo "===== Docker ====="
+                    docker --version
+
+                    echo "===== Buildx ====="
+                    docker buildx version || true
+
+                    echo "===== Compose ====="
+                    docker-compose --version || true
                 '''
             }
         }
-
         stage('Install Frontend') {
-            steps {
-                dir('frontend') {
-                    sh 'npm ci'
+                    steps {
+                        dir('frontend') {
+                            sh 'npm install'
+                        }
+                    }
+                }
+
+                stage('Build Frontend') {
+                    steps {
+                        dir('frontend') {
+                            sh 'npm run build'
+                        }
+                    }
+                }
+
+                stage('Deploy') {
+                    steps {
+                        sh '''
+                            docker-compose down || true
+                            docker-compose build --no-cache
+                            docker-compose up -d
+                        '''
+                    }
+                }
+
+                stage('Check Containers') {
+                    steps {
+                        sh '''
+                            docker ps
+                        '''
+                    }
+                }
+            }
+
+            post {
+
+                success {
+                    echo '========================'
+                    echo '배포 완료'
+                    echo '========================'
+
+                    sh '''
+                        docker ps
+                    '''
+                }
+
+                failure {
+                    echo '========================'
+                    echo '배포 실패'
+                    echo '========================'
+
+                    sh '''
+                        echo "===== Docker PS ====="
+                        docker ps -a || true
+
+                        echo "===== Docker Images ====="
+                        docker images || true
+                    '''
+                }
+
+                always {
+                    sh 'docker ps || true'
                 }
             }
         }
-
-        stage('Build Frontend') {
-            steps {
-                dir('frontend') {
-                    sh 'npm run build'
-                }
-            }
-        }
-
-        stage('Deploy') {
-            steps {
-                sh '''
-                    docker compose down
-                    docker compose build
-                    docker compose up -d
-                '''
-            }
-        }
-
-        stage('Check Containers') {
-            steps {
-                sh 'docker ps -a'
-            }
-        }
-    }
-
-    post {
-        always {
-            echo '========================'
-            echo '배포 결과 확인'
-            echo '========================'
-            sh '''
-                docker ps -a || true
-                docker images || true
-            '''
-        }
-        failure {
-            echo '배포 실패'
-        }
-        success {
-            echo '배포 성공'
-        }
-    }
-}

@@ -10,6 +10,4 @@ COPY . .
 
 RUN npm run build
 
-EXPOSE 5713
-
-CMD ["npm", "run", "dev", "--", "--host"]
+CMD ["npm", "run", "dev"]
